@@ -75,7 +75,7 @@ Make sure to set up [a dedicated IAM user](./aws.md#setup-iam-user), [DNS record
 
 ## Creating a Cluster
 
-You can add an Ocean instance group to new or existing clusters. To create a new cluster with a Ocean instance groups, run:
+To create a new cluster with Ocean-Managed instance groups, run:
 
 ```bash
 # configure the feature flags
@@ -84,6 +84,10 @@ export KOPS_FEATURE_FLAGS="Spotinst,SpotinstOcean"
 # create the cluster
 kops create cluster --zones=us-west-2a example
 ```
+
+## Creating an Instance Group
+
+To create a new Ocean-Managed instance group with an existing cluster, run:
 
 !!!note
     It's possible to have a cluster with both Ocean-managed and unmanaged instance groups.
@@ -100,6 +104,7 @@ kops create -f instancegroups.yaml
 # instancegroups.yaml
 # A cluster with both Ocean-managed and unmanaged instance groups.
 ---
+# Ocean-managed
 # Use Ocean in hybrid mode.
 apiVersion: kops.k8s.io/v1alpha2
 kind: InstanceGroup
@@ -118,30 +123,38 @@ metadata:
   ...
 ```
 
-## Creating an Instance Group
+## Migrate an Instance Group to Ocean-Managed
 
-To create a new instance group, run:
+To import all instance groups within an existing cluster, run:
 
 ```bash
 # configure the feature flags
 export KOPS_FEATURE_FLAGS="Spotinst,SpotinstOcean"
 
-# create the instance group
-kops create instancegroup --role=node --name=example
+# update kops
+kops update cluster --yes
 ```
 
-To create a new instance group and have more control over the configuration, a config file can be used.
+To import specific instance groups within an existing cluster, run:
+
+```bash
+# configure the feature flags
+export KOPS_FEATURE_FLAGS="Spotinst,SpotinstOcean,SpotinstHybrid"
+
+# edit the specific instance group to be Ocean-Managed
+kops edit ig nodes
+```
 
 ```yaml
-# instancegroup.yaml
-# An instance group with Ocean configuration.
----
+# nodes.yaml
+# Migrate to Ocean-managed by adding hybrid metadata label
 apiVersion: kops.k8s.io/v1alpha2
 kind: InstanceGroup
 metadata:
   labels:
     kops.k8s.io/cluster: "example"
-    spotinst.io/spot-percentage: "90"
+    spotinst.io/hybrid: "true"
+    spotinst.io/spot-percentage: "50"
   ...
 ```
 
